@@ -1,0 +1,18 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# local database files
+*.db
+macrocoach.db
+
+# envs / secrets
+.env
+.venv/
+venv/
+
+# editor/system noise
+.vscode/
+.idea/
+.DS_Store
