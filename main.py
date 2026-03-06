@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, Query, status
+from fastapi import FastAPI, Depends, HTTPException, Query
 from datetime import date, timedelta
 from sqlalchemy.orm import Session
 from typing import Optional, List
@@ -271,3 +271,36 @@ def weight_adjustments(username:str, desired_lbs_per_week: float, days: int = 35
         weight_rows=weight_rows,
         desired_lbs_per_week=desired_lbs_per_week
     )
+
+@app.get("/dashboard")
+def get_dashboard(username: str, db: Session = Depends(get_db)):
+    user = get_user_by_username(db, username)
+    user_id = user.id
+
+    latest_macro = db.query(DailyMacro).filter(DailyMacro.user_id == user_id).order_by(DailyMacro.day.desc()).first()
+    target = db.query(Target).filter(Target.user_id == user_id).first()
+    rolling = build_rolling_insights(
+        days=7,
+        start=date.today() - timedelta(days=7),
+        end=date.today(),
+        macro_rows=db.query(DailyMacro).filter(DailyMacro.user_id == user_id, DailyMacro.day >= date.today()-timedelta(days=7), DailyMacro.day <= date.today()).order_by(DailyMacro.day.asc()).all(),
+        weight_rows=db.query(Weight).filter(Weight.user_id == user_id, Weight.day >= date.today() - timedelta(days=7), Weight.day <= date.today()).order_by(Weight.day.asc()).all()
+    )
+
+    return {
+        "username": user.username,
+        "latest_macro": None if latest_macro is None else {
+            "day": latest_macro.day,
+            "calories": latest_macro.calories,
+            "protein_g": latest_macro.protein_g,
+            "carbs_g": latest_macro.carbs_g,
+            "fat_g": latest_macro.fat_g,
+        },
+        "target": None if target is None else {
+            "calories_target": target.calories_target,
+            "protein_target": target.protein_target_g,
+            "carbs_target": target.carbs_target_g,
+            "fat_target": target.fat_target_g,
+        },
+        "rolling": rolling
+    }
