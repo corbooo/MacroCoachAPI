@@ -117,7 +117,7 @@ def list_weights(username:str, start: Optional[date] = None, end: Optional[date]
         q = q.filter(Weight.day < end)
 
     total = q.count()
-    rows = q.order_by(Weight.day.asc()).offset(offset).limit(limit).all()
+    rows = q.order_by(Weight.day.desc()).offset(offset).limit(limit).all()
     return {"count": total, "weights": rows}
 
 @app.post("/macros", response_model=MacroUpsertOut)
@@ -188,7 +188,7 @@ def list_macros(username:str, start: Optional[date] = None, end: Optional[date] 
         q = q.filter(DailyMacro.day < end)
 
     total = q.count()
-    rows = q.order_by(DailyMacro.day.asc()).offset(offset).limit(limit).all()
+    rows = q.order_by(DailyMacro.day.desc()).offset(offset).limit(limit).all()
     return {"count": total, "macros": rows}
 
 @app.post("/targets", response_model=TargetUpsertOut)
